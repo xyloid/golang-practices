@@ -1,11 +1,8 @@
 // Package prime imlements function factor
 package prime
 
-import "fmt"
-
 // Factors return all the prime factors of a give number
 func Factors(n int64) []int64 {
-	fmt.Println(n)
 	ret := make([]int64, 0)
 	for factor := int64(2); factor <= n; {
 
