@@ -1,8 +1,6 @@
 // Package tree implement data structures and functions for the tree building
 package tree
 
-import "fmt"
-
 // Record is a single piece of record
 type Record struct {
 	ID     int
@@ -24,11 +22,15 @@ func Build(records []Record) (root *Node, err error) {
 		node := createNode(record)
 		traceTable[record.ID] = node
 	}
-	fmt.Println(traceTable)
+
 	// assigning child
 	for _, record := range records {
+		// prevent stackoverflow
+		if record.ID == 0 {
+			continue
+		}
 		if parentNode, ok := traceTable[record.Parent]; ok {
-
+			// fmt.Println(parentNode)
 			parentNode.Children = append(parentNode.Children, traceTable[record.ID])
 		}
 	}
