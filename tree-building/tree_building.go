@@ -1,7 +1,10 @@
 // Package tree implement data structures and functions for the tree building
 package tree
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+)
 
 // Record is a single piece of record
 type Record struct {
@@ -19,20 +22,40 @@ type Node struct {
 func Build(records []Record) (root *Node, err error) {
 	traceTable := make(map[int]*Node)
 
+	maxID := -1
 	// creating all the nodes without assigning any child
 	for _, record := range records {
 		node := createNode(record)
+		if _, ok := traceTable[record.ID]; ok {
+			return nil, fmt.Errorf("Duplicated node")
+		}
+		if record.Parent > record.ID {
+			return nil, fmt.Errorf("higher id parent of lower id")
+		}
+		if record.ID != 0 && record.ID == record.Parent {
+			return nil, fmt.Errorf("direct loop detected")
+		}
 		traceTable[record.ID] = node
+		if record.ID > maxID {
+			maxID = record.ID
+		}
+	}
+	if len(traceTable) > 0 && traceTable[0] == nil {
+		return nil, fmt.Errorf("No root node")
+	}
+	if len(traceTable) != maxID+1 {
+		return nil, fmt.Errorf("no continuous")
 	}
 
 	// assigning child
 	for _, record := range records {
-		// prevent stackoverflow
 		if record.ID == 0 {
+			if record.Parent != 0 {
+				return nil, fmt.Errorf("Root(node 0) can not have any parent")
+			}
 			continue
 		}
 		if parentNode, ok := traceTable[record.Parent]; ok {
-			// fmt.Println(parentNode)
 			if parentNode.Children == nil {
 				parentNode.Children = make([]*Node, 0)
 			}
@@ -49,7 +72,6 @@ func Build(records []Record) (root *Node, err error) {
 }
 
 func createNode(record Record) *Node {
-
 	return &Node{record.ID, nil}
 }
 
