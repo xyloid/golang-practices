@@ -21,39 +21,41 @@ func Frequency(s string) FreqMap {
 func ConcurrentFrequency(strings []string) FreqMap {
 	m := FreqMap{}
 	quit := make(chan int)
-	channel := make(chan rune)
+	resultChannel := make(chan FreqMap, 10)
 
 	var mux sync.Mutex
 
-	go func(fm FreqMap, ch chan rune) {
-		for {
-			r, ok := <-ch
+	go func(fm FreqMap, ch chan FreqMap) {
 
-			if !ok {
-				break
-			}
+		for mp := range ch {
 			mux.Lock()
-			fm[r]++
+			for k, v := range mp {
+				m[k] += v
+			}
 			mux.Unlock()
 		}
+
 		quit <- 0
 
-	}(m, channel)
+	}(m, resultChannel)
 
 	var wg sync.WaitGroup
 
 	for _, s := range strings {
 		wg.Add(1)
-		go func(text string, ch chan rune) {
+		go func(text string, ch chan FreqMap) {
+			localFreq := FreqMap{}
 			for _, r := range text {
-				ch <- r
+				localFreq[r]++
 			}
+
+			ch <- localFreq
 			wg.Done()
-		}(s, channel)
+		}(s, resultChannel)
 	}
 
 	wg.Wait()
-	close(channel)
+	close(resultChannel)
 	<-quit
 	return m
 }
