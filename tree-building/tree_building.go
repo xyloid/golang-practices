@@ -1,6 +1,8 @@
 // Package tree implement data structures and functions for the tree building
 package tree
 
+import "sort"
+
 // Record is a single piece of record
 type Record struct {
 	ID     int
@@ -31,13 +33,28 @@ func Build(records []Record) (root *Node, err error) {
 		}
 		if parentNode, ok := traceTable[record.Parent]; ok {
 			// fmt.Println(parentNode)
+			if parentNode.Children == nil {
+				parentNode.Children = make([]*Node, 0)
+			}
 			parentNode.Children = append(parentNode.Children, traceTable[record.ID])
 		}
+	}
+
+	// sort children
+	for _, record := range records {
+		sort.Sort(byID(traceTable[record.ID].Children))
 	}
 
 	return traceTable[0], err
 }
 
 func createNode(record Record) *Node {
-	return &Node{record.ID, make([]*Node, 0)}
+
+	return &Node{record.ID, nil}
 }
+
+type byID []*Node
+
+func (arr byID) Len() int           { return len(arr) }
+func (arr byID) Swap(i, j int)      { arr[i], arr[j] = arr[j], arr[i] }
+func (arr byID) Less(i, j int) bool { return arr[i].ID < arr[j].ID }
