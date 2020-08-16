@@ -20,13 +20,35 @@ type Node struct {
 
 // Build builds a tree based on the given records
 func Build(records []Record) (root *Node, err error) {
-	traceTable := make(map[int]*Node)
 
-	maxID := -1
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].ID < records[j].ID
+	})
+
+	nodeNumber := len(records)
+
+	if nodeNumber == 0 {
+		return
+	}
+	if records[nodeNumber-1].ID+1 != nodeNumber {
+		return nil, fmt.Errorf("non-continuous")
+	}
+
+	if records[0].ID != 0 {
+		return nil, fmt.Errorf("No root node")
+	}
+
+	if records[0].Parent != 0 {
+		return nil, fmt.Errorf("Root(node 0) can not have any parent")
+	}
+
+	nodes := make([]*Node, nodeNumber)
+
 	// creating all the nodes without assigning any child
-	for _, record := range records {
-		node := createNode(record)
-		if _, ok := traceTable[record.ID]; ok {
+	for i, record := range records {
+
+		// check
+		if nodes[i] != nil {
 			return nil, fmt.Errorf("Duplicated node")
 		}
 		if record.Parent > record.ID {
@@ -35,48 +57,24 @@ func Build(records []Record) (root *Node, err error) {
 		if record.ID != 0 && record.ID == record.Parent {
 			return nil, fmt.Errorf("direct loop detected")
 		}
-		traceTable[record.ID] = node
-		if record.ID > maxID {
-			maxID = record.ID
-		}
-	}
-	if len(traceTable) > 0 && traceTable[0] == nil {
-		return nil, fmt.Errorf("No root node")
-	}
-	if len(traceTable) != maxID+1 {
-		return nil, fmt.Errorf("no continuous")
+
+		// create
+		node := &Node{record.ID, nil}
+		nodes[i] = node
 	}
 
-	// assigning child
+	// assigning child, note the order of children is already sorted
 	for _, record := range records {
-		if record.ID == 0 {
-			if record.Parent != 0 {
-				return nil, fmt.Errorf("Root(node 0) can not have any parent")
-			}
-			continue
-		}
-		if parentNode, ok := traceTable[record.Parent]; ok {
+		if record.ID > 0 {
+			parentNode := nodes[record.Parent]
+
 			if parentNode.Children == nil {
 				parentNode.Children = make([]*Node, 0)
 			}
-			parentNode.Children = append(parentNode.Children, traceTable[record.ID])
+			parentNode.Children = append(parentNode.Children, nodes[record.ID])
 		}
+
 	}
 
-	// sort children
-	for _, record := range records {
-		sort.Sort(byID(traceTable[record.ID].Children))
-	}
-
-	return traceTable[0], err
+	return nodes[0], err
 }
-
-func createNode(record Record) *Node {
-	return &Node{record.ID, nil}
-}
-
-type byID []*Node
-
-func (arr byID) Len() int           { return len(arr) }
-func (arr byID) Swap(i, j int)      { arr[i], arr[j] = arr[j], arr[i] }
-func (arr byID) Less(i, j int) bool { return arr[i].ID < arr[j].ID }
