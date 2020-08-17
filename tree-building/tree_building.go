@@ -25,13 +25,11 @@ func Build(records []Record) (root *Node, err error) {
 		return records[i].ID < records[j].ID
 	})
 
-	nodeNumber := len(records)
-
-	if nodeNumber == 0 {
+	if len(records) == 0 {
 		return
 	}
 
-	nodes := make([]*Node, nodeNumber)
+	nodes := make([]*Node, len(records))
 
 	// creating all the nodes without assigning any child
 	for i, r := range records {
@@ -40,13 +38,12 @@ func Build(records []Record) (root *Node, err error) {
 		}
 
 		// create
-		node := &Node{r.ID, nil}
-		nodes[i] = node
+		nodes[i] = &Node{r.ID, nil}
 
 		// add to parent's node
 		if r.ID > 0 {
 			parent := nodes[r.Parent]
-			parent.Children = append(parent.Children, node)
+			parent.Children = append(parent.Children, nodes[i])
 		}
 
 	}
