@@ -19,22 +19,22 @@ type Node struct {
 }
 
 // Build builds a tree based on the given records
-func Build(records []Record) (root *Node, err error) {
+func Build(records []Record) (*Node, error) {
+
+	if len(records) == 0 {
+		return nil, nil
+	}
 
 	sort.Slice(records, func(i, j int) bool {
 		return records[i].ID < records[j].ID
 	})
-
-	if len(records) == 0 {
-		return
-	}
 
 	nodes := make([]*Node, len(records))
 
 	// creating all the nodes without assigning any child
 	for i, r := range records {
 		if r.ID != i || r.Parent > r.ID || r.ID > 0 && r.Parent == r.ID {
-			return nil, fmt.Errorf("Invalid records")
+			return nil, fmt.Errorf("Invalid records %+v", r)
 		}
 
 		// create
@@ -45,8 +45,7 @@ func Build(records []Record) (root *Node, err error) {
 			parent := nodes[r.Parent]
 			parent.Children = append(parent.Children, nodes[i])
 		}
-
 	}
 
-	return nodes[0], err
+	return nodes[0], nil
 }
