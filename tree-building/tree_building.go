@@ -46,11 +46,6 @@ func Build(records []Record) (root *Node, err error) {
 		// add to parent's node
 		if r.ID > 0 {
 			parent := nodes[r.Parent]
-
-			if parent.Children == nil {
-				parent.Children = make([]*Node, 0)
-			}
-
 			parent.Children = append(parent.Children, node)
 		}
 
