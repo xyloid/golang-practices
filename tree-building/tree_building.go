@@ -30,48 +30,28 @@ func Build(records []Record) (root *Node, err error) {
 	if nodeNumber == 0 {
 		return
 	}
-	if records[nodeNumber-1].ID+1 != nodeNumber {
-		return nil, fmt.Errorf("non-continuous")
-	}
-
-	if records[0].ID != 0 {
-		return nil, fmt.Errorf("No root node")
-	}
-
-	if records[0].Parent != 0 {
-		return nil, fmt.Errorf("Root(node 0) can not have any parent")
-	}
 
 	nodes := make([]*Node, nodeNumber)
 
 	// creating all the nodes without assigning any child
-	for i, record := range records {
-
-		// check
-		if nodes[i] != nil {
-			return nil, fmt.Errorf("Duplicated node")
-		}
-		if record.Parent > record.ID {
-			return nil, fmt.Errorf("higher id parent of lower id")
-		}
-		if record.ID != 0 && record.ID == record.Parent {
-			return nil, fmt.Errorf("direct loop detected")
+	for i, r := range records {
+		if r.ID != i || r.Parent > r.ID || r.ID > 0 && r.Parent == r.ID {
+			return nil, fmt.Errorf("Invalid records")
 		}
 
 		// create
-		node := &Node{record.ID, nil}
+		node := &Node{r.ID, nil}
 		nodes[i] = node
-	}
 
-	// assigning child, note the order of children is already sorted
-	for _, record := range records {
-		if record.ID > 0 {
-			parentNode := nodes[record.Parent]
+		// add to parent's node
+		if r.ID > 0 {
+			parent := nodes[r.Parent]
 
-			if parentNode.Children == nil {
-				parentNode.Children = make([]*Node, 0)
+			if parent.Children == nil {
+				parent.Children = make([]*Node, 0)
 			}
-			parentNode.Children = append(parentNode.Children, nodes[record.ID])
+
+			parent.Children = append(parent.Children, node)
 		}
 
 	}
