@@ -3,7 +3,6 @@ package robotname
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -32,7 +31,6 @@ func (r *Robot) Name() (string, error) {
 		for records[r.name] == true {
 			r.name = r.randName()
 		}
-		fmt.Println(len(records))
 		records[r.name] = true
 	}
 
