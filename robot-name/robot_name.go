@@ -2,6 +2,8 @@
 package robotname
 
 import (
+	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -11,6 +13,10 @@ type Robot struct {
 	name string
 }
 
+const nameLimit = 26 * 26 * 10 * 10 * 10
+
+var records = make(map[string]bool)
+
 var digits = []rune("0123456789")
 
 var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -18,7 +24,16 @@ var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 // Name returns a formatted robot name.
 func (r *Robot) Name() (string, error) {
 	if r.name == "" {
+		if len(records) == nameLimit {
+			return "", errors.New("Name exhuasted")
+		}
 		r.name = r.randName()
+
+		for records[r.name] == true {
+			r.name = r.randName()
+		}
+		fmt.Println(len(records))
+		records[r.name] = true
 	}
 
 	return r.name, nil
@@ -26,7 +41,7 @@ func (r *Robot) Name() (string, error) {
 
 // Reset generates a new name for the robot.
 func (r *Robot) Reset() {
-	r.name = r.randName()
+	r.name = ""
 }
 
 func (r *Robot) randName() string {
